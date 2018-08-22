@@ -514,7 +514,8 @@
         $scope.form = {
                 
                 id : chrome.id,
-                org : chrome.org_path?chrome.org_path:''
+                org : chrome.org_path?chrome.org_path:'',
+                email : chrome.email,
             };
 
 

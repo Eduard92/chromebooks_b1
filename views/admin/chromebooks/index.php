@@ -34,8 +34,9 @@
                         <td>{{chrome.email}}</td>
                         <td>{{chrome.org_path}}</td>
                         <?php if(group_has_role('chromebooks','admin_chrome')): ?>
-                          <td ng-if="chrome.org_path == null "><a ng-if="chrome.estatus == 'disponible' " uib-tooltip="Asignar Chromebook a Org" href="#" ng-click="asignar(chrome)" class="btn-icon btn-icon-sm btn-success ui-wave"><i class="fa fa-plus-square" aria-hidden="true"></i> </a> <a  uib-tooltip="Configurar Estatus" href="#" ng-click="config(chrome)" class="btn-icon btn-icon-sm btn-primary ui-wave" ><i class="fa fa-cogs" aria-hidden="true"></i></a></td>
-                          <td ng-if="chrome.org_path != null"><a uib-tooltip="Remover Chromebook a Org" href="#" ng-click="remover(chrome)" class="btn-icon btn-icon-sm btn-danger ui-wave"><i class="fa fa-minus-square" aria-hidden="true"></i></a> <a  uib-tooltip="Configurar Estatus"  href="#" ng-click="config(chrome)" class="btn-icon btn-icon-sm btn-primary ui-wave"><i class="fa fa-cogs" aria-hidden="true"></i></a></td>
+                          <td ng-if="chrome.org_path == null "><button ng-disabled="chrome.estatus != 'disponible' || chrome.email != null" uib-tooltip="Asignar Chromebook a Org" href="#" ng-click="asignar(chrome)" class="btn btn-default btn-success ui-wave "><i class="fa fa-plus-square" aria-hidden="true"></i> </button> <button ng-disabled="chrome.email != null || chrome.org_path != '/Dirección General'"  uib-tooltip="Configurar Estatus" href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave" ><i class="fa fa-cogs" aria-hidden="true"></i></button>
+</td>
+                          <td ng-if="chrome.org_path != null"><button ng-disabled="chrome.estatus != 'disponible' || chrome.email != null"  uib-tooltip="Remover Chromebook a Org" href="#" ng-click="remover(chrome)" class="btn btn-default btn-success ui-wave "><i class="fa fa-minus-square" aria-hidden="true"></i></button> <button  ng-disabled="chrome.email != null || chrome.org_path != '/Dirección General'" uib-tooltip="Configurar Estatus"  href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave"><i class="fa fa-cogs" aria-hidden="true"></i></button></td>
                         <?php endif;?>
                     </tr>
                 </tbody>
@@ -50,6 +51,8 @@
           <?php  echo form_open('','name="frm" id="frm"');?>
 
     <div class="modal-body">
+                          <div ng-if="form.email" class="alert alert-warning" ><?=lang('chromebook:not_change')?></div>
+
                     <div ng-bind-html="message" ng-if="message" class="alert alert-danger" "></div>
                     <div class="form-group">
                             <label>No. serial</label>
@@ -71,7 +74,7 @@
     <div class="modal-footer">
         <button type="button" ui-wave class="btn btn-flat" ng-click="cancel()">Cancelar</button>
         <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org" ng-click="save()" ng-if="method=='create'">Aceptar</button>
-        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org" ng-click="remove()" ng-if="method=='edit'">Remover</button>
+        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org || form.email 1= null" ng-click="remove()" ng-if="method=='edit'">Remover</button>
 
     </div>    
      <?php echo form_close(); ?>                       
