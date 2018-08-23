@@ -745,6 +745,8 @@
                    $scope.chrome = chrome;
                    
                    $scope.chrome.estatus  = send_data.estatus;
+
+                   $scope.chrome.observaciones  = send_data.observaciones;
                   
                    logger.logSuccess(result.message);
 

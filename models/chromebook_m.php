@@ -38,7 +38,8 @@ class Chromebook_m extends MY_Model {
         $data = array(
                 
             'id'      		=> $input['serie'],
-            'org_path  '	=> $input['org_path']
+            'org_path  '	=> $input['org_path'],
+            'estatus'       =>'disponible'
             
         );
         

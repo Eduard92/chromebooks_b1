@@ -22,13 +22,9 @@ class Admin extends Admin_Controller {
          );
          
          $orgs         = $this->org_m->get_all();
-         $q            = $this->input->get('q');
          $base_where   = array();
          
-         if($q)
-         {
-            $base_where['id_chromebook'] = $q;
-         } 
+
 
          if(!group_has_role('chromebooks','admin_chrome'))
         {
@@ -40,20 +36,36 @@ class Admin extends Admin_Controller {
 
         if(count($orgs_path)>0)
          {
-             $chromebooks = $this->chromebook_m->where_in('org_path',$orgs_path)
-                            ->order_by('org_path')
-                            ->get_all();
-         }
-          else{
-         
-         $chromebooks  = $this->chromebook_m
-                                ->order_by('org_path')
+
+            $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
+                                        ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
+                                        ->get_all();
+
+            
+            $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)
+                                ->select('id_chromebook AS id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
+                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                ->where('removido IS NULL',null)
                                 ->get_all();
+         }
+        else{
+
+            $chromebooks  = $this->chromebook_m 
+                                ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
+                                ->get_all();
+            
+            $asignaciones = $this->asignacion_m->select('id_chromebook AS   id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
+                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                ->where('removido IS NULL',null)
+                                ->get_all();
+                
+
         }
-        
+
+        $resume = array_merge($chromebooks,$asignaciones);
 
         $this->template->title($this->module_details['name'])
-                   ->append_metadata('<script type="text/javascript"> var orgs='.json_encode($orgs).', resume='.json_encode($chromebooks).';</script>')
+                   ->append_metadata('<script type="text/javascript"> var orgs='.json_encode($orgs).', resume='.json_encode($resume).';</script>')
                    ->set('chromebooks',$chromebooks)
                    ->append_js('module::chromebook.controller.js')
                    ->build('admin/chromebooks/index');
