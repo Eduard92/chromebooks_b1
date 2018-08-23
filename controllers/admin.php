@@ -38,7 +38,7 @@ class Admin extends Admin_Controller {
          {
 
             $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
-                                        ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
+                                        ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
                                         ->get_all();
 
             
@@ -51,7 +51,7 @@ class Admin extends Admin_Controller {
         else{
 
             $chromebooks  = $this->chromebook_m 
-                                ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
+                                ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
                                 ->get_all();
             
             $asignaciones = $this->asignacion_m->select('id_chromebook AS   id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
@@ -192,7 +192,10 @@ class Admin extends Admin_Controller {
             'data'   => array()
          );
 
-            $chromebook = $this->chromebook_m->where(array('email IS NULL' => null, ))->get($this->input->post('id')) ;
+           //S $chromebook = $this->chromebook_m->where(array('email IS NULL' => null, ))->get($this->input->post('id')) ;
+
+            $chromebook  = $this->chromebook_m->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
+                                ->get($this->input->post('id')) ;
            
 
             if($chromebook)
