@@ -74,7 +74,7 @@
     <div class="modal-footer">
         <button type="button" ui-wave class="btn btn-flat" ng-click="cancel()">Cancelar</button>
         <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org" ng-click="save()" ng-if="method=='create'">Aceptar</button>
-        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org || form.email 1= null" ng-click="remove()" ng-if="method=='edit'">Remover</button>
+        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-disabled="!form.org || form.email != null" ng-click="remove()" ng-if="method=='edit'">Remover</button>
 
     </div>    
      <?php echo form_close(); ?>                       
