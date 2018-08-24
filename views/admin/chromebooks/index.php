@@ -169,6 +169,7 @@
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="reparacion"/> Reparación</label>
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="extraviado"/> Extraviado</label>
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="baja"/> Baja</label>
+                             <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="general"/> General</label>
                          </div>
                    </div>               
     </div>

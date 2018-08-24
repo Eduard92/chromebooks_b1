@@ -18,6 +18,10 @@
         </thead>
                             {{table}}
     </table>
+        <br />
+         <br />
+    <p align="left">{{total_gral}}</p>
+
     <page_footer>
         <table>
         <tr>
@@ -30,6 +34,7 @@
              
         </tr>
     </table>
+
     </page_footer>
  
 

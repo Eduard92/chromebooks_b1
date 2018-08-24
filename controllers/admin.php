@@ -531,6 +531,7 @@ class Admin extends Admin_Controller {
         $org =     $_GET["org"];
         $base_where =  array();
 
+
         if(is_numeric($estatus)&& $estatus==0)
         {
             if(empty($org) == false)
@@ -653,7 +654,7 @@ class Admin extends Admin_Controller {
 
         }
         else{
-            if(is_string($estatus))
+            if(is_string($estatus) && $estatus != 'general')
             {
                 $base_where['org_path'] = '/Dirección General';
 
@@ -735,6 +736,102 @@ class Admin extends Admin_Controller {
                   $total= 'Total: '.$count;      
 
             }
+            elseif(is_string($estatus) && $estatus == 'general')
+            {
+                $title = 'Reporte De Chromebooks'; 
+                $count = 0; 
+
+                $asignados = $this->asignacion_m->select('COUNT(estatus) as cantidad,estatus,org_path')
+                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                ->where('removido IS NULL',null)
+                                ->group_by('estatus,org_path')
+                                ->order_by('org_path','ASC')
+                                ->get_all();
+
+
+                     $table_header = '<tr>';
+
+                     $table_header .='<th width="250"; align="center" style="border-bottom: #a6ce39 2px solid;padding: 3px; font-size: 10px;">Plantel/Centro</th>';
+                     $table_header .='<th width="200"; align="center" style="border-bottom: #a6ce39 2px solid;padding: 3px; font-size: 10px;">Estatus</th>';
+                     $table_header .='<th width="200"; align="center" style="border-bottom: #a6ce39 2px solid;padding: 3px; font-size: 10px;">Total</th>';
+
+                     $table_header .= '</tr>';
+
+                    $table = '<tbody>';
+
+                   
+                    foreach ($asignados as $asignado)
+                    {        
+
+                         $org_path_explod = explode("/",$asignado->org_path);  
+
+                        $asignado->org_path  =  str_replace('/','',$org_path_explod[count($org_path_explod)-1]);
+
+                        $count++;
+
+                        $table .= '<tr>';  
+                                    
+                        $table .='<td  width="250"; align="left" style="padding: 3px;vertical-align: middle;font-size: 10px; border-bottom: #7A7A7A 1px solid;">'.$asignado->org_path.'</td>';
+                        $table .='<td  width="200"; align="center" style="padding: 3px;vertical-align: middle;font-size: 10px;border-bottom: #7A7A7A 1px solid;"> Asignados </td>';
+                        $table .='<td  width="200"; align="center" style="padding: 3px;vertical-align: middle;font-size: 10px; border-bottom: #7A7A7A 1px solid;">'.$asignado->cantidad.'</td>';
+
+                        $table .= '</tr>'; 
+                    }
+                    $chromebooks  = $this->chromebook_m->select('COUNT(estatus) as cantidad,estatus,org_path')
+                               ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
+                                ->group_by('estatus,org_path')
+                                ->order_by('estatus','ASC')
+                                ->get_all();
+
+                    foreach ($chromebooks as $chromebook)
+                    {        
+
+                         $org_path_explod = explode("/",$chromebook->org_path);  
+
+                        $chromebook->org_path  =  str_replace('/','',$org_path_explod[count($org_path_explod)-1]);
+
+                        $count++;
+                        $chromebook->org_path = $chromebook->org_path?$chromebook->org_path:'Almacen';
+
+                        $table .= '<tr>';  
+                                    
+                        $table .='<td  width="250"; align="left" style="padding: 3px;vertical-align: middle;font-size: 10px; border-bottom: #7A7A7A 1px solid;">'.$chromebook->org_path.'</td>';
+                        $table .='<td  width="200"; align="center" style="padding: 3px;vertical-align: middle;font-size: 10px;border-bottom: #7A7A7A 1px solid;"> '.ucwords($chromebook->estatus).' </td>';
+                        $table .='<td  width="200"; align="center" style="padding: 3px;vertical-align: middle;font-size: 10px; border-bottom: #7A7A7A 1px solid;">'.$chromebook->cantidad.'</td>';
+
+                        $table .= '</tr>'; 
+                    }
+
+                    $table .= '</tbody>';
+
+
+                $total_asignados = $this->asignacion_m->select('COUNT(estatus) as cantidad')
+                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                ->where('removido IS NULL',null)
+                                ->get_all();
+                 $total_disponibles  = $this->chromebook_m->select('COUNT(estatus) as cantidad')
+                               ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus' => 'disponible'))
+                                ->get_all();
+                $total_reparacion  = $this->chromebook_m->select('COUNT(estatus) as cantidad')
+                               ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus' => 'reparacion'))
+                                ->get_all();
+                 $total_baja  = $this->chromebook_m->select('COUNT(estatus) as cantidad')
+                               ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus' => 'baja'))
+                                ->get_all();
+                 $total_extraviado  = $this->chromebook_m->select('COUNT(estatus) as cantidad')
+                               ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus' => 'extraviado'))
+                                ->get_all();
+            
+           $totales =  $total_asignados['0']->cantidad + $total_disponibles['0']->cantidad + $total_reparacion['0']->cantidad + $total_baja['0']->cantidad + $total_extraviado['0']->cantidad;
+            $total_gral= 'Total Asignadas: '.$total_asignados['0']->cantidad.' 
+            <br /> Total Disponibles:'.$total_disponibles['0']->cantidad.' 
+            <br /> Total Reparación:'.$total_reparacion['0']->cantidad.' 
+            <br />Total Bajas:'.$total_baja['0']->cantidad.'
+            <br />Total Extraviadas:'.$total_extraviado['0']->cantidad.'
+            <br />Total Chromebooks:'.$totales;  
+
+                     
+            }
             else
             {
               $this->session->set_flashdata('error',lang('chromebook:error_doc'));
@@ -766,10 +863,12 @@ class Admin extends Admin_Controller {
               array('table'=>$table,
                     'table_header'=>$table_header,
                     'title'=>$title,
-                    'total'=>$total,),true);
+                    'total'=>$total,
+                    'total_gral'=>$total_gral),true);
            
         $html2pdf->writeHTML($output);
         $html2pdf->Output($doc.'_'.now().'.pdf');
+        
      
     }
       
