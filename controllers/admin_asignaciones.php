@@ -538,6 +538,7 @@ class Admin_Asignaciones extends Admin_Controller {
                                     {        
                                         $csv['status']= true;
                                         $csv['message']='Removido';
+                                        $result['asignado'] = true;
 
                                         
                                     }
