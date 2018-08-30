@@ -538,6 +538,7 @@ class Admin_Asignaciones extends Admin_Controller {
                                     {        
                                         $csv['status']= true;
                                         $csv['message']='Removido';
+                                        $result['asignado'] = true;
 
                                         
                                     }
@@ -561,7 +562,7 @@ class Admin_Asignaciones extends Admin_Controller {
                 }
                 else
                 {
-                    $result['message']='Falta la columna serie en el archivo cargado';
+                    $result['message']='Falta la columna serial en el archivo cargado';
                     $result['status'] = false;
                     
                 }

@@ -10,7 +10,7 @@
 
     .controller('IndexCtrlAsig',['$scope','$http','$uibModal','$filter','logger',IndexCtrlAsig])
     .controller('InputModalAsig',['$scope','$http','$uibModalInstance','chrome','method','logger',InputModalAsig])
-    .controller('InputModalAdd',['$scope','$http','$uibModalInstance','logger',InputModalAdd])    
+    .controller('InputModalAdd',['$scope','$http','$uibModalInstance','logger','chromebooks',InputModalAdd])    
     .controller('InputModalStatus',['$scope','$http','$uibModalInstance','chrome','logger',InputModalStatus])
     .controller('InputModalRemoverCsv',['$scope','$http','$uibModalInstance','$cookies','$timeout','Upload','logger',InputModalRemoverCsv]);
 
@@ -284,6 +284,9 @@
                                 chrome: function () {
                                     return chrome;
                                 },
+                                chromebooks: function () {
+                                    return $scope.chromebooks;
+                                },
                             }
                       });
 
@@ -454,6 +457,7 @@
 
         $scope.change = function()
         {
+          console.log($scope.form.org.org_path);
           var org_path = $scope.form.org.org_path;
           var id_chromebook = $scope.form.id_chromebook
 
@@ -592,10 +596,10 @@
 
     }
 
-    function InputModalAdd($scope,$http,$uibModalInstance,logger)
+    function InputModalAdd($scope,$http,$uibModalInstance,logger,chromebooks)
     {
         $scope.orgs = orgs; 
-        $scope.chromebooks = resume.chromebooks;
+        $scope.chromebooks = resume;
       
          $scope.cancel = function(){
              $uibModalInstance.dismiss("cancel");
@@ -612,7 +616,7 @@
 
                if(result.status)
                {
-                     resume.chromebooks.unshift({'id':serie,'org_path':org_path});
+                     resume.unshift({'id':serie,'org_path':org_path});
                 
                      $uibModalInstance.close();
 

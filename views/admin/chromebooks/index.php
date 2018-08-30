@@ -109,7 +109,7 @@
        
                         
         <button type="button" ui-wave class="btn btn-flat" ng-click="cancel()">Cancelar</button>
-        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-click="save()" ">Aceptar</button>
+        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-if="frm_add.serie"  ng-click="save()" ">Aceptar</button>
     </div>    
      <?php echo form_close(); ?>                       
 </script>

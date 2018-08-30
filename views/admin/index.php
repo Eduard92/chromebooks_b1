@@ -79,7 +79,6 @@
    
         <uib-tabset class="ui-tab">
             <uib-tab  heading="Asignacion"  ng-if="method!='details'" active="true" >
-            
                     <div ng-bind-html="message" ng-if="message" class="alert alert-info" ng-class="{'alert-success':!form.id && status,'alert-danger':!form.id&& !status}"></div>
                     <div class="form-group">
                             <label>No. serial</label>
