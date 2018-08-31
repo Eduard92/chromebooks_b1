@@ -31,23 +31,25 @@ class Admin extends Admin_Controller {
             $orgs_perm = Centro::GetPermissions('orgs');
           
             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
+
+                if(count($orgs_path)>0)
+                 {
+
+                    $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
+                                                ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
+                                                ->get_all();
+
+                    
+                    $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)
+                                        ->select('id_chromebook AS id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
+                                        ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                        ->where('removido IS NULL',null)
+                                        ->get_all();
+                 }
             
         }
 
-        if(count($orgs_path)>0)
-         {
 
-            $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
-                                        ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
-                                        ->get_all();
-
-            
-            $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)
-                                ->select('id_chromebook AS id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
-                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                                ->where('removido IS NULL',null)
-                                ->get_all();
-         }
         else{
 
             $chromebooks  = $this->chromebook_m 

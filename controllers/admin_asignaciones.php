@@ -78,15 +78,15 @@ class Admin_Asignaciones extends Admin_Controller {
           
             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
 
+                 if(count($orgs_path)>0)
+                 {
+                    $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
+                                        ->join('emails','emails.email=chromebook_asignacion.email')
+                                        
+                                        ->count_by('removido IS NULL',null);
+                 }
+
             
-         }
-         
-         if(count($orgs_path)>0)
-         {
-            $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
-                                ->join('emails','emails.email=chromebook_asignacion.email')
-                                
-                                ->count_by('removido IS NULL',null);
          }
          else
          {
@@ -162,14 +162,7 @@ class Admin_Asignaciones extends Admin_Controller {
             $org = $this->org_m->where_in('id',$orgs_perm)->get_all();          
             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
 
-    
-         }
-         else
-         {
-            $org         = $this->org_m->get_all();
-         }
-         
-         if(count($orgs_path)>0)
+                     if(count($orgs_path)>0)
          {
          $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
                                         ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
@@ -192,7 +185,12 @@ class Admin_Asignaciones extends Admin_Controller {
                                 ->where('removido IS NULL',null)->get_all();   
 
          }
-        else{
+
+    
+         }
+         else
+         {
+            $org         = $this->org_m->get_all();
 
         $chromebooks  = $this->chromebook_m 
                                 ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
@@ -268,51 +266,99 @@ class Admin_Asignaciones extends Admin_Controller {
             'message' => '',
             'data'    => false
         );
-        
 
-        $asignacion = $this->asignacion_m->get_by(array(
-            'id_chromebook' => $id,
-            'removido IS NULL'      =>NULL, 
-        ));
-        
-        if($asignacion)
-        {
-            $result['message'] = lang('chromebook:pre_asignado'); 
-        }
-        
-        else
-        {
-            $email = $this->input->post('email');
-            $insert = array(
-                'responsable' => $email['full_name'],
-                'email'       => $email['email'],
-                'id_chromebook' => $id,
-                'asignado'      => date('Y-m-d H:i:s'),
-                'observaciones' => $this->input->post('observaciones')
-            );
+       $org_distinct = false;
+       $org_alterada = false;
 
+
+        if(!group_has_role('chromebooks','admin_asignaciones'))
+         {
+            $orgs_perm = Centro::GetPermissions('orgs');
             
-                if($result_id = $this->asignacion_m->insert($insert))
-                {
-                    $insert['id'] = $result_id ;
-                    $result['message'] = lang('chromebook:asignado'); 
-                    $result['data']   = $insert;
-                    $result['status']   = true;
-                        
-                        if($this->input->post('org_distinct') == true)
-                             { 
-                                $this->chromebook_m->update($this->input->post('id_chromebook'),array(
-                                'org_path' =>  $email['org_path'], ));
-                             }
+            $org = $this->org_m->where_in('id',$orgs_perm)->get_all();          
+
+            $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
+
+                     
+            foreach ($orgs_path as $org) 
+            {
+                $org_path = $this->input->post('org');
+
+              //  $org_path['org_path'] = '/Alumnos/Plantel 03 - Escárcega';
+
+                if($org == $org_path['org_path'])
+                {                         
+                    $org_alterada = false;
+
+                    $chromebook = $this->chromebook_m->get_by('id' , $this->input->post('id_chromebook') );
+
+
+                    if($chromebook->org_path != $org_path['org_path'])
+                    {                         
+                         $org_distinct = true;
+
+                          // print_r('diferente');
+                         break;
+                    }
 
                 }
                 else
                 {
-                    $result['message'] = lang('chromebook:error'); 
-                }            
-            
-        }
+                   $org_alterada = true;
+                    $result['message'] = lang('chromebook:org_alterada'); 
+                }
+
+
+            }
         
+        }
+
+        if($org_alterada == false){
+            $asignacion = $this->asignacion_m->get_by(array(
+                'id_chromebook' => $id,
+                'removido IS NULL'      =>NULL, 
+            ));
+            
+            if($asignacion)
+            {
+                $result['message'] = lang('chromebook:pre_asignado'); 
+            }
+            
+            else
+            {
+                $email = $this->input->post('email');
+                $insert = array(
+                    'responsable' => $email['full_name'],
+                    'email'       => $email['email'],
+                    'id_chromebook' => $id,
+                    'asignado'      => date('Y-m-d H:i:s'),
+                    'observaciones' => $this->input->post('observaciones')
+                );
+
+                
+                    if($result_id = $this->asignacion_m->insert($insert))
+                    {
+                        $insert['id'] = $result_id ;
+                        $result['message'] = lang('chromebook:asignado'); 
+                        $result['data']   = $insert;
+                        $result['status']   = true;
+
+
+                                        
+                            if($org_distinct == true && $org_alterada == false) 
+                                 { 
+                                    $this->chromebook_m->update($this->input->post('id_chromebook'),array(
+                                    'org_path' =>  $email['org_path'], ));
+                                 }
+
+                    }
+                    else
+                    {
+                        $result['message'] = lang('chromebook:error'); 
+                    }            
+                
+            }
+        }
        
         return $this->template->build_json($result);
     }

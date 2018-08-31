@@ -29,6 +29,7 @@ $lang['chromebook:not_change']	 		 =	'Cromebook Asignada: Imposible cambiar de e
 $lang['chromebook:status_change']	 	 =	'Se realizó el cambio de estatus correctamente.';
 $lang['chromebook:error_status_change']	 =	'Ocurrio un error al tratar de cambiar el estatus. Comuniquese con el administrador.';
 $lang['chromebook:not_change_org']	 	 =	'Cromebook debe estar asignada a Dirección General.';
+$lang['chromebook:org_alterada']	 	 =	'No tienes permisos para esta accioón.';
 
 
 
