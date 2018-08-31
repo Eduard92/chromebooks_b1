@@ -629,6 +629,44 @@ class Admin_Asignaciones extends Admin_Controller {
         return $this->template->build_json($result);
     }
 
+    public function delete()
+    {
+        $result = array(
+            'status' => false,
+            'message' => '',
+            'data'    => false
+        );
+        $id_chromebook = $this->input->post('id');
+
+        
+        $asignacion = $this->asignacion_m->where('removido IS NULL',null)->get_by('id_chromebook',$id_chromebook) ;
+
+        $asignado_centro = $this->chromebook_m->where('org_path IS NULL',null)->get_by('id',$id_chromebook) ;
+
+       
+
+        if(!$asignacion && $asignado_centro)
+        {
+
+            if( $this->chromebook_m->delete($id_chromebook))
+            {
+                $result['message'] = lang('chromebook:delete');
+                $result['status'] = true;
+            }
+            else
+            {
+                $result['message'] = lang('chromebook:delete_error');
+            }           
+        }
+        else
+        {
+            
+            $result['message'] = lang('chromebook:not_delete');
+            
+        }
+        return $this->template->build_json($result);
+
+    }
 
       
     

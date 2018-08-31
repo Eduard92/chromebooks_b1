@@ -318,6 +318,30 @@
  
                       });
         }
+
+        $scope.delete = function(chrome)
+        {
+
+            $http.post(SITE_URL+'admin/chromebooks/asignaciones/delete',{id:chrome.id}).then(function(response){
+              
+              var result =response.data;
+
+               if(result.status)
+               {
+                  logger.logSuccess(result.message);
+                   var index = resume.indexOf(chrome);
+                        resume.splice(index,1);
+               }
+               else
+               {
+                 logger.logError(result.message);
+               }
+              
+              
+                
+            });
+
+        }
     }
 
     function InputCtrl($scope,$http,$uibModalInstance,$window,chrome,asignaciones,chromebooks,method)

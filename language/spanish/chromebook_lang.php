@@ -30,6 +30,10 @@ $lang['chromebook:status_change']	 	 =	'Se realizó el cambio de estatus correct
 $lang['chromebook:error_status_change']	 =	'Ocurrio un error al tratar de cambiar el estatus. Comuniquese con el administrador.';
 $lang['chromebook:not_change_org']	 	 =	'Cromebook debe estar asignada a Dirección General.';
 $lang['chromebook:org_alterada']	 	 =	'No tienes permisos para esta accioón.';
+$lang['chromebook:delete']	 	 		 =	'Chromebook Eliminada Correctamente.';
+$lang['chromebook:delete_error']	 	 =	'Ocurrio un error al intentar eliminar Chromebook.';
+$lang['chromebook:not_deltete']	 	 	 =	'Imposible eliminar Chromebook.';
+
 
 
 
