@@ -200,7 +200,9 @@
     <div class="modal-body">
 
         <div class="alert alert-warning" ng-if="dispose">Favor de no cerrar esta ventana, hasta terminar con el proceso</div> 
-        <div class="alert alert-danger"  ng-if="message"> {{message}} </div>               
+        <div class="alert alert-danger"  ng-if="message && status == false"> {{message}} </div>    
+        <div class="alert alert-success"  ng-if="message && status == true"> {{message}} </div>               
+           
 
                       <div class="form-group">
                             <label>Organización</label>
@@ -219,7 +221,7 @@
                      <div  class="extra">Total registros: {{remove_result.length}}</div>
                      <div  class="well" data-slim-scroll data-scroll-height="200px">          
                           <ul class="list-unstyled list-users-li">
-                              <li ng-repeat="remove in remove_result | filter:search_result">
+                              <li ng-repeat="remove in remove_result">
                                   <span class="fa fa-check text-success" ng-if="remove.status"></span>
                                   <span class="fa {{remove.icon}} text-danger" ng-if="!remove.status" title="{{remove.message}}"></span>
                                   {{remove.serial}}                                                                              

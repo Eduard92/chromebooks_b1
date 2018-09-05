@@ -500,7 +500,7 @@ class Admin_Asignaciones extends Admin_Controller {
 
         $file_result   = Files::upload($folder->id,false,'file',false,false,false,'csv');
         
-        $error = true;
+        $error ;
         
        
         if($file_result['status'])
@@ -526,8 +526,8 @@ class Admin_Asignaciones extends Admin_Controller {
             
             Files::delete_file($file_result['data']['id']);
              
-
-            foreach($csv_array as &$csv)
+            $csv_array_temp = $csv_array;
+            foreach($csv_array_temp as $key => &$csv)
             {
                 
                 $csv['serial']  = utf8_encode($csv['serial']);
@@ -538,38 +538,18 @@ class Admin_Asignaciones extends Admin_Controller {
                     {
                        
 
-                /*    if(!group_has_role('chromebooks','admin_asignaciones'))
-                    {
-                        $orgs_perm = Centro::GetPermissions('orgs');
-          
-                        $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
-                   }
-
-
-                   /* if(!group_has_role('chromebooks','admin_asignaciones'))
-                    {
-                        $asignado = $this->asignacion_m->select('chromebook_asignacion.id,id_chromebook, org_path,asignado,removido')
-                            ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                            //->where_in('org_path',$orgs_path)
-                            ->where('removido IS NULL',null)->where('asignado IS NOT NULL',null)->get_by('id_chromebook',$csv['serial']) ;
-                      //  $asignado = $this->asignacion_m->where_in('org_path',$orgs_path)->where('removido IS NULL',null)->join('emails','emails.email=chromebook_asignacion.email')->get_by('id_chromebook',$csv['serial']) ;
-                    }else
-                    {*/
                          $asignado = $this->asignacion_m->select('chromebook_asignacion.id,id_chromebook, org_path,asignado,removido')
                             ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
                            ->where( array('removido IS NULL' => NULL ,'asignado IS NOT NULL' => NULL ))->get_by('id_chromebook',$csv['serial']) ;
-                      //  $asignado = $this->asignacion_m->where('removido IS NULL',null)->get_by('id_chromebook',$csv['serial']) ;
 
-                   // }
 
                         if(!$asignado)
                         {
-                            $result['message'] = 'La Chromebook '.$csv['serial'] .' No se encuetra Asignada';
-                             $result['status'] = false;
-                            //$csv['icon']    = 'fa fa-warning';
-                            //$csv['status']= false;
-                            break;
-                            //continue;
+                            $csv['message'] = 'La Chromebook No se encuetra Asignada';
+                            $csv['icon']    = 'fa fa-warning';
+                            $csv['status']= false;
+                            $error = true;
+                             continue;
                         } 
 
                         else
@@ -578,37 +558,19 @@ class Admin_Asignaciones extends Admin_Controller {
                             if ($asignado->org_path != $this->input->post('org'))
                                 {
 
-                                    $result['message'] = 'La Chromebook '. $csv['serial'].' tiene otra ORG Registrada';
-                                     $result['status'] = false;
-                                   // $csv['icon']    = 'fa fa-warning';
-                                    //$csv['status']= false;
-                                   // continue;
-                                    break;
+                                    $csv['message'] = 'La Chromebook tiene otra ORG Registrada';
+                                   
+                                    $csv['icon']    = 'fa fa-warning';
+                                    $csv['status']= false;
+                                    $error = true;
+                                    continue;
                                 }
                                 else
                                 {
-                                    $result['message'] = 'ok';
                                     $error = false;
+                                    unset($csv_array_temp[$key]);       
                                 }
-                           
-                                    /*if($this->asignacion_m->update($asignado->id,array(
-                                        'removido' => date('Y-m-d H:i:s'),
-                                        'observaciones' => $csv['observaciones'])))
-                                    {        
-                                        $csv['status']= true;
-                                        $csv['message']='Removido';
-                                        $result['asignado'] = true;
-
-                                        
-                                    }
-                                    else
-                                    {
-                                       $csv['status']= false;
-                                       $csv['message'] = 'Error al remover la chromebook '.$csv['serial'].' comuniquese con el Administrador';
-                                       $csv['icon']    = 'fa fa-warning';
-                                        continue;
-                                    }  */
-                                            
+                                                                       
 
                         }
                     }
@@ -616,6 +578,7 @@ class Admin_Asignaciones extends Admin_Controller {
                     {
                         $result['message']='Falta la columna observaciones en el archivo cargado';
                         $result['status'] = false;
+                        $error = true;
                         
                     }
                 }
@@ -623,13 +586,14 @@ class Admin_Asignaciones extends Admin_Controller {
                 {
                     $result['message']='Falta la columna serial en el archivo cargado';
                     $result['status'] = false;
+                    $error = true;
                     
                 }
                 
                
                 
             }
-                      
+                       $result['data']   = $csv_array_temp;
             
             //return $this->template->build_json($result);
              //echo  json_encode($result);
@@ -640,10 +604,11 @@ class Admin_Asignaciones extends Admin_Controller {
 
         if($error == false)
         {
-           foreach($csv_array as &$csv)
+        
+           foreach($csv_array as  $key =>  &$csv)
             {
                 
-                $csv['serial']  = utf8_encode($csv['serial']);
+                $csv_['serial']  = utf8_encode($csv['serial']);
 
                 $asignado = $this->asignacion_m->select('chromebook_asignacion.id,id_chromebook, org_path,asignado,removido')
                             ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
@@ -651,15 +616,18 @@ class Admin_Asignaciones extends Admin_Controller {
 
                 if($this->asignacion_m->update($asignado->id,array('removido' => date('Y-m-d H:i:s'),'observaciones' => $csv['observaciones'])))
                 {        
-                  $csv['status']= true;
-                  $csv['message']='Removido';
+                  $result['status']= true;
+                  $result['message']='Chromebooks Removidas con Exito';
                   $result['asignado'] = true;
+                  unset($csv_array[$key]);      
                                     
                 }
                 else
                 {
+                   $result['status'] = true;
+                   $result['message'] = 'Error desconocido al remover una o mas chromeboos comuniquese con el Administrador';
                    $csv['status']= false;
-                   $csv['message'] = 'Error al remover la chromebook '.$csv['serial'].' comuniquese con el Administrador';
+                   $csv['message'] = 'Error al remover la chromebook comuniquese con el Administrador';
                    $csv['icon']    = 'fa fa-warning';
                 }  
             }

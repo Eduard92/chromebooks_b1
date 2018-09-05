@@ -712,10 +712,14 @@
                   if(result.status == true)
                   {
                       $scope.remove_result = result.data;
+                      $scope.message = result.message;
+                      $scope.status = true;
                   }
                   else
                     {
+                            $scope.remove_result = result.data;
                             $scope.message = result.message;
+                            $scope.status = false;
                     }   
                 if(result.asignado)
                   {
