@@ -9,7 +9,9 @@
         </table>
     </page_header>
     <h4 align="center">{{title}}</h4>
+    <p align="right">{{fecha}}</p>
     <p align="right">{{total}}</p>
+
     <br />
     
     <table >

@@ -13,6 +13,23 @@ class Admin extends Admin_Controller {
 
     function index()
     {   
+        if(empty($_GET) == false)
+        {
+            $this->session->set_userdata('get',$_GET);
+        }
+        
+        $_GET = $this->session->userdata('get')?$this->session->userdata('get'):$_GET;
+        
+        $base_where = array();
+        
+   
+        $f_status   = $this->input->get('f_status');
+        
+        if($f_status)
+        {
+            $base_where['estatus'] = $f_status;
+        }
+
         $this->load->library('centros/centro');
 
          $orgs_path = array();
@@ -22,7 +39,7 @@ class Admin extends Admin_Controller {
          );
          
          $orgs         = $this->org_m->get_all();
-         $base_where   = array();
+         //$base_where   = array();
          
 
 
@@ -37,14 +54,11 @@ class Admin extends Admin_Controller {
 
                     $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
                                                 ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
+                                                 ->where($base_where)
                                                 ->get_all();
 
                     
-                    $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)
-                                        ->select('id_chromebook AS id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
-                                        ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                                        ->where('removido IS NULL',null)
-                                        ->get_all();
+                
                  }
             
         }
@@ -54,17 +68,15 @@ class Admin extends Admin_Controller {
 
             $chromebooks  = $this->chromebook_m 
                                 ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null))
+                                 ->where($base_where)
                                 ->get_all();
+
             
-            $asignaciones = $this->asignacion_m->select('id_chromebook AS   id,chromebook_asignacion.email,estatus,chromebooks.observaciones,org_path')
-                                ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                                ->where('removido IS NULL',null)
-                                ->get_all();
-                
+         
 
         }
 
-        $resume = array_merge($chromebooks,$asignaciones);
+        $resume = $chromebooks;
 
         $this->template->title($this->module_details['name'])
                    ->append_metadata('<script type="text/javascript"> var orgs='.json_encode($orgs).', resume='.json_encode($resume).';</script>')
@@ -658,7 +670,7 @@ class Admin extends Admin_Controller {
         else{
             if(is_string($estatus) && $estatus != 'general')
             {
-                $base_where['org_path'] = '/Dirección General';
+              // $base_where['org_path'] = '/Dirección General';
 
                 if($estatus == 'reparacion')
                 {
@@ -685,7 +697,7 @@ class Admin extends Admin_Controller {
 
                 $chromebooks  = $this->chromebook_m->where($base_where)
 
-                                //->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
+                                ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
                                 ->get_all();
 
                     if(empty($chromebooks) == true)
@@ -841,7 +853,7 @@ class Admin extends Admin_Controller {
               redirect('admin/chromebooks');
             }
         }
-        
+        $fecha= 'Reporte Generado '.strftime("%#d").' de '.strftime("%B").' de '.strftime("%Y");
 
         ini_set('max_execution_time', 300);
 
@@ -863,6 +875,7 @@ class Admin extends Admin_Controller {
                                ->enable_parser(true)
             ->build('templates/'.$doc,
               array('table'=>$table,
+                    'fecha'=>$fecha,
                     'table_header'=>$table_header,
                     'title'=>$title,
                     'total'=>$total,
