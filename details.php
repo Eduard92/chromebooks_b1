@@ -21,17 +21,16 @@
 				
 			),
 			'description' => array(
-				'en' => '.',
+				'en' => 'Chromebooks management',
 				
 				'es' => 'Administración de Chromebooks',
 				
 			),
 			'frontend' => false,
 			'backend' => true,
-			'menu' => 'content',
+			'menu' => 'admin',
             'roles' => array(
-				'create', 'admin_chrome','admin_asignaciones',
-			),
+				'create', 'admin_chrome','admin_asignaciones'),
             'sections'=>array(
                 'chromebooks'=>array(
                     'name'=>'chromebook:title',
@@ -54,7 +53,7 @@
         			)
                 ),
                 'Asignaciones'=>array(
-                    'name'=>'chromebook:asinaciones_title',
+                    'name'=>'chromebook:asignaciones_title',
                     'uri' => 'admin/chromebooks/asignaciones',
         			
                 )

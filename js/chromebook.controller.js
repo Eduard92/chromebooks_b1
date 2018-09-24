@@ -6,15 +6,13 @@
     .controller('InputCtrl',['$scope','$http','$uibModalInstance','$window','chrome','asignaciones','chromebooks','method',InputCtrl])
     .controller('InputModalReport',['$scope','$http','$uibModalInstance','$window',InputModalReport])
     .controller('InputModalReportDg',['$scope','$http','$uibModalInstance','$window',InputModalReportDg])
-
-
     .controller('IndexCtrlAsig',['$scope','$http','$uibModal','$filter','logger',IndexCtrlAsig])
     .controller('InputModalAsig',['$scope','$http','$uibModalInstance','chrome','method','logger',InputModalAsig])
-    .controller('InputModalAdd',['$scope','$http','$uibModalInstance','logger','chromebooks',InputModalAdd])    
     .controller('InputModalStatus',['$scope','$http','$uibModalInstance','chrome','logger',InputModalStatus])
+    .controller('InputModalAdd',['$scope','$http','$uibModalInstance','logger',InputModalAdd])
+    
+    
     .controller('InputModalRemoverCsv',['$scope','$http','$uibModalInstance','$cookies','$timeout','Upload','logger',InputModalRemoverCsv]);
-
-
 
     function IndexCtrl($scope,$http,$uibModal,$filter,logger)
     {
@@ -217,23 +215,41 @@
  
                       });
         }
-
+        
+        
+        
+        
+        
+        
         $scope.remover_csv = function()
         {
-             var modalInstance = $uibModal.open({
+                     var modalInstance = $uibModal.open({
                             animation: $scope.animationsEnabled,
                             templateUrl: 'modalRemoverCsv.html',
                             controller: 'InputModalRemoverCsv',
                   
  
                       });
+                      
+                modalInstance.result.then(function (status) {
+                    
+                    if(status)
+                    {
+                        location.href= SITE_URL+'admin/chromebooks/asignaciones';
+                    }
+                           // $scope.selected = selectedItem;
+                }, function () {
+                            
+                           // $treeData.contentFolders($scope.current_level); //verificar funcionamiento
+                            
+                });
         }
     }
 
     function IndexCtrlAsig($scope,$http,$uibModal,$filter,logger)
     {
 
-        $scope.chromebooks = resume;
+       $scope.chromebooks = resume;
 
        $scope.asignar = function(chrome)
        {
@@ -284,14 +300,10 @@
                                 chrome: function () {
                                     return chrome;
                                 },
-                                chromebooks: function () {
-                                    return $scope.chromebooks;
-                                },
                             }
                       });
 
        }  
-
        $scope.config = function(chrome)
        {
            
@@ -308,7 +320,7 @@
                       });
 
        }  
-        $scope.report_dg = function()
+       $scope.report_dg = function()
         {
              var modalInstance = $uibModal.open({
                             animation: $scope.animationsEnabled,
@@ -317,30 +329,6 @@
                   
  
                       });
-        }
-
-        $scope.delete = function(chrome)
-        {
-
-            $http.post(SITE_URL+'admin/chromebooks/asignaciones/delete',{id:chrome.id}).then(function(response){
-              
-              var result =response.data;
-
-               if(result.status)
-               {
-                  logger.logSuccess(result.message);
-                   var index = resume.indexOf(chrome);
-                        resume.splice(index,1);
-               }
-               else
-               {
-                 logger.logError(result.message);
-               }
-              
-              
-                
-            });
-
         }
     }
 
@@ -351,9 +339,11 @@
         $scope.dispose = true;
         $scope.method = method;
         $scope.history = history;
+        $scope.chrome = chrome;
+        $scope.emails = [];
+        $scope.total_emails=0;
         
-        
-        if(chrome.id_chromebook)
+        if(chrome.id_chromebook)//Pauta para desasignar
         {
             $scope.form = {
                 id:chrome.id,
@@ -365,7 +355,7 @@
             
             $scope.message = '<strong>ATENCION</strong><br/>  Este equipo va a ser removido';
         }
-        else
+        else //Pauta para asignar
         {
             $scope.form = {
                 
@@ -374,23 +364,22 @@
 
             };
         }
-
+        
+        $scope.title = 'Asignar/Remover '+$scope.form.id_chromebook;
         
         if(method=='details')
         {
+            $scope.title = 'Detalles '+$scope.form.id_chromebook;
             history();
         }
         function history()
         {
             $http.post(SITE_URL+'admin/chromebooks/asignaciones/history/'+$scope.form.id_chromebook,{}).then(function(response){                
                 var result =response.data;
-                var data = result.data;
-
-                if(result.status){
+                
+                if(result.status)
                     $scope.historial = result.data;
-                  }
-
-                 
+                
             });
         }
         $scope.cancel = function () {
@@ -399,13 +388,18 @@
         
         $scope.save = function()
         {
+            if($scope.form.org.org_path != chrome.org_path && !confirm('La organización al cual va ser asignado es diferente.¿Desea continuar?'))
+            {
+                return false;
+            }
+            
             $scope.dispose = false;
             var url = chrome.id_chromebook?'admin/chromebooks/asignaciones/remover/':'admin/chromebooks/asignaciones/asignar/';
             $http.post(SITE_URL+url+$scope.form.id_chromebook,$scope.form).then(function(response){
                 
                 $scope.dispose = true;
                var result = response.data;
-               console.log(result);
+               
                if(result.status)
                {
                     //console.log(chrome);
@@ -415,20 +409,20 @@
                         var index = asignaciones.indexOf(chrome);
                         asignaciones.splice(index,1);
                         
-                        chromebooks.push({id:chrome.id_chromebook})
-                        $window.open(SITE_URL+'admin/chromebooks/acuse_f/devolucion/'+result.id_history); 
-
+                        chromebooks.push({id:chrome.id_chromebook,org_path:chrome.org_path});
+                        
+                        $window.open(SITE_URL+'admin/chromebooks/acuse_f/devolucion/'+result.data); 
                     }
                     else{
                         ///Verificar viabilidad
-                         $window.open(SITE_URL+'admin/chromebooks/acuse_f/comodato/'+result.data.id); 
                         var index = chromebooks.indexOf(chrome);
                         chromebooks.splice(index,1);
                         
                         result.data.org_path = $scope.form.org.org_path;
                         result.data.full_name = $scope.form.email.full_name;
-
-
+                        
+                        
+                         $window.open(SITE_URL+'admin/chromebooks/acuse_f/comodato/'+result.data.id); 
                         //result.data.id = String(result.data.id);
                         //console.log(result.data);
                         //asignaciones.push(result.data);
@@ -441,10 +435,7 @@
                    $scope.message = result.message;
                }
               
-               //$scope.emails = response.data;
-               //$scope.alummos = response.data;
-
-               //console.log(emails);
+               
                  
             });
         }
@@ -462,12 +453,21 @@
             
             
             if(oldValue && oldValue != newValue )$scope.org_path='';
+            $scope.total_emails =0;
+            var email = '';
+            if($scope.form.email)
+            {
+                email = $scope.form.email.email;
+            }
             
-            $http.post(SITE_URL+'admin/chromebooks/asignaciones/get_emails',{org_path:org_path.org_path}).then(function(response){
+            $http.post(SITE_URL+'admin/chromebooks/asignaciones/get_emails',{org_path:org_path.org_path,email:email}).then(function(response){
  
                
                $scope.emails = response.data;
-              
+               $.each($scope.emails,function(index,data){
+                
+                    $scope.total_emails++;
+               });
                 
             });
             
@@ -481,8 +481,7 @@
 
         $scope.change = function()
         {
-          console.log($scope.form.org.org_path);
-          var org_path = $scope.form.org.org_path;
+          /*var org_path = $scope.form.org.org_path;
           var id_chromebook = $scope.form.id_chromebook
 
           $http.post(SITE_URL+'admin/chromebooks/asignaciones/getOrgChrome',{org_path:org_path,id_chromebook:id_chromebook}).then(function(response){
@@ -498,7 +497,7 @@
                      $scope.form.org_distinct = false;
                    }
                                                  
-            });
+            })*/;
          
         }
     }
@@ -510,6 +509,7 @@
          $scope.cancel = function(){
              $uibModalInstance.dismiss("cancel");
         }
+
                 
         $scope.save = function(){
 
@@ -542,8 +542,7 @@
         $scope.form = {
                 
                 id : chrome.id,
-                org : chrome.org_path?chrome.org_path:'',
-                email : chrome.email,
+                org : chrome.org_path?chrome.org_path:''
             };
 
 
@@ -620,10 +619,10 @@
 
     }
 
-    function InputModalAdd($scope,$http,$uibModalInstance,logger,chromebooks)
+    function InputModalAdd($scope,$http,$uibModalInstance,logger)
     {
         $scope.orgs = orgs; 
-        $scope.chromebooks = resume;
+        $scope.chromebooks = resume.chromebooks;
       
          $scope.cancel = function(){
              $uibModalInstance.dismiss("cancel");
@@ -640,7 +639,7 @@
 
                if(result.status)
                {
-                     resume.unshift({'id':serie,'org_path':org_path});
+                     resume.chromebooks.unshift({'id':serie,'org_path':org_path});
                 
                      $uibModalInstance.close();
 
@@ -658,75 +657,78 @@
 
         }
     }
-
+    
+        
     function InputModalRemoverCsv($scope,$http,$uibModalInstance,$cookies,$timeout,Upload,logger)
     {     
       $scope.orgs = orgs;
       $scope.remove_result = [];
-      $scope.dispose = false;
+      $scope.dispose = true;
       $scope.message  = false;
+      $scope.status   = false;
 
          $scope.cancel = function(){
              $uibModalInstance.dismiss("cancel");
-        }
+         }
 
    
-        $scope.save = function(){
+        $scope.close = function(){
 
-                  if($scope.cambio)
-                  {
-                     
-                      location.reload();
-                  }
-                  else
-                  {
-                     $uibModalInstance.close();
-                  }
+                 
+                     $uibModalInstance.close(true);
+                  
 
         }
 
         $scope.upload_file = function(file,type)
         {
+            
+            if(!file) return false;
             var org_path = $scope.remove.org?$scope.remove.org.org_path:'';
 
-            $scope.dispose = true;
+            $scope.dispose = false;
             $scope.message  = false;
+            
             $scope.remove_result = [];
 
 
             
-            console.log(org_path);    
+            
             file.upload = Upload.upload({
               url: SITE_URL+'admin/chromebooks/asignaciones/upload',
-              data: { org:org_path,type:type,file: file,csrf_hash_name:$cookies.get(pyro.csrf_cookie_name)},
+              data: { org:org_path,file: file,csrf_hash_name:$cookies.get(pyro.csrf_cookie_name)}
             });
+           
             
             file.upload.then(function (response) {
               var  result = response.data,
                    data   = response.data.data;
               $timeout(function () {
                   file.result = response.data;
-                  $scope.dispose = false;
+                  $scope.dispose = true;
 
-
+                  $scope.status = result.status;
+                  $scope.message = result.message;
+                  $scope.remove_result = result.data;
+                  
+                  
                   if(result.status == true)
                   {
-                      $scope.remove_result = result.data;
-                      $scope.message = result.message;
-                      $scope.status = true;
+                     setTimeout(function() {
+                        location.href = SITE_URL+'admin/chromebooks/asignaciones';
+                    }, 2000);
+                     
                   }
-                  else
-                    {
-                            $scope.remove_result = result.data;
-                            $scope.message = result.message;
-                            $scope.status = false;
-                    }   
-                if(result.asignado)
+                  /*else
+                  {
+                      
+                  } */  
+                /* if(result.asignado)
                   {
                       $scope.cambio = true;
                   } 
 
-                  console.log( $scope.remove_result);
+                  console.log( $scope.remove_result);*/
 
                  
                  
@@ -741,9 +743,110 @@
             
             
         }
-    }
-
-        function InputModalStatus($scope,$http,$uibModalInstance,chrome,logger)
+    }  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    function InputModalStatus($scope,$http,$uibModalInstance,chrome,logger)
     {
              $scope.form_status = {
                 
@@ -801,7 +904,7 @@
  
     }
 
-      function InputModalReportDg($scope,$http,$uibModalInstance,$window)
+    function InputModalReportDg($scope,$http,$uibModalInstance,$window)
     {
 
          $scope.cancel = function(){
@@ -821,6 +924,4 @@ console.log($scope.form_status.estatus);
         }
 
     }
-
-    
 })();

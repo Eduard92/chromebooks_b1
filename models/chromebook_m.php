@@ -32,22 +32,6 @@ class Chromebook_m extends MY_Model {
         
     }
 
-        function create($input)
-    {
-
-        $data = array(
-                
-            'id'      		=> $input['serie'],
-            'org_path  '	=> $input['org_path'],
-            'estatus'       =>'disponible'
-            
-        );
-        
-        
-        return $this->insert($data);
-        
-    }
-
 		
  }
  ?>

@@ -10,11 +10,11 @@ class Admin_Asignaciones extends Admin_Controller {
         $this->load->model(array('chromebook_m','asignacion_m','files/file_folders_m','emails/org_m'));
         $this->lang->load('chromebook');
         $this->load->library(array('files/files'));
-        $this->load->library('centros/centro');
-        $this->config->load('files/files');
-        $this->_path = FCPATH.rtrim($this->config->item('files:path'), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+                $this->load->library('centros/centro');
 
 
+      //  $this->config->load('files/files');
+       $this->_path = FCPATH.rtrim($this->config->item('files:path'), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
          $this->validation_rules = array(
              array(
                 'field' => 'full_name',
@@ -68,26 +68,27 @@ class Admin_Asignaciones extends Admin_Controller {
          
          if($q)
          {
-            $base_where['(id_chromebook LIKE \'%'.$q.'%\'  OR default_chromebook_asignacion.email LIKE \'%'.$q.'%\')'] = null;
+            $base_where['(id_chromebook LIKE \'%'.$q.'%\'  OR default_chromebook_asignacion.email LIKE \'%'.$q.'%\' OR responsable LIKE \'%'.$q.'%\')'] = null;
          }
          
-
-          if(!group_has_role('chromebooks','admin_asignaciones'))
+         $orgs_path = array('/Dummy/');
+         if(!group_has_role('chromebooks','admin_asignaciones'))
          {
-            $orgs_perm = Centro::GetPermissions('orgs');
+             $orgs_perm = Centro::GetPermissions('orgs');
           
-            $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
-
-                 if(count($orgs_path)>0)
-                 {
-                    $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
-                                        ->join('emails','emails.email=chromebook_asignacion.email')
-                                        
-                                        ->count_by('removido IS NULL',null);
-                 }
+             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
+             if(count($orgs_path)>0)
+             {
+                $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    
+                                    ->count_by('removido IS NULL',null);
+             }
 
             
          }
+         
+         
          else
          {
              $total_asignaciones = $this->asignacion_m->where($base_where)
@@ -103,7 +104,7 @@ class Admin_Asignaciones extends Admin_Controller {
                 'rows'       => array()
             );
             
-            $pagination = create_pagination('admin//chromebooks/asignaciones/'.$anio, $total_asignaciones,20,5);
+            $pagination = create_pagination('admin/chromebooks/asignaciones/'.$anio, $total_asignaciones,20,5);
          
          if(!group_has_role('chromebooks','admin_asignaciones'))
          {
@@ -162,51 +163,52 @@ class Admin_Asignaciones extends Admin_Controller {
             $org = $this->org_m->where_in('id',$orgs_perm)->get_all();          
             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
 
-                     if(count($orgs_path)>0)
-         {
-         $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
-                                        ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
-                                        ->get_all();
-        
-         $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
-                                ->join('emails','emails.email=chromebook_asignacion.email')
-                                
-                                ->count_by('removido IS NULL',null);
-                                
-          
-         $pagination = create_pagination('admin/chromebooks/asignaciones/', $total_asignaciones,20);
-         
-         
-         
-         $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
-                                ->select('full_name,observaciones, org_path,chromebook_asignacion.id AS id,chromebook_asignacion.email,asignado,id_chromebook')
-                                ->limit($pagination['limit'],$pagination['offset'])//->select('*,chromebook_asignacion.id AS id')
-                                ->join('emails','emails.email=chromebook_asignacion.email')
-                                ->where('removido IS NULL',null)->get_all();   
-
-         }
-
+             if(count($orgs_path)>0)
+             {
+             $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
+                                    ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
+                                    
+                                    ->get_all();
+            
+             $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    
+                                    ->count_by('removido IS NULL',null);
+                                    
+              
+             $pagination = create_pagination('admin/chromebooks/asignaciones/', $total_asignaciones,20);
+             
+             
+             
+             $asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
+                                    ->select('full_name,observaciones, org_path,chromebook_asignacion.id AS id,chromebook_asignacion.email,asignado,id_chromebook')
+                                    ->limit($pagination['limit'],$pagination['offset'])//->select('*,chromebook_asignacion.id AS id')
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    ->where('removido IS NULL',null)->get_all();   
     
+             }
          }
          else
          {
             $org         = $this->org_m->get_all();
-
-        $chromebooks  = $this->chromebook_m 
-                                ->where(array('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)'=>null,'estatus'=>'disponible'))
-                                ->get_all();
         
-         $total_asignaciones = $this->asignacion_m->where($base_where)
-                                ->join('emails','emails.email=chromebook_asignacion.email')
-                                
-                                ->count_by('removido IS NULL',null);
-                                
-          
-         $pagination = create_pagination('admin/chromebooks/asignaciones/', $total_asignaciones,20);
-         
-         
-         
-         $asignaciones = $this->asignacion_m->where($base_where)
+
+             $chromebooks  = $this->chromebook_m 
+                                    ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
+                                    
+                                    ->get_all();
+            
+             $total_asignaciones = $this->asignacion_m->where($base_where)
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    
+                                    ->count_by('removido IS NULL',null);
+                                    
+              
+             $pagination = create_pagination('admin/chromebooks/asignaciones/', $total_asignaciones,20);
+             
+             
+             
+             $asignaciones = $this->asignacion_m->where($base_where)
                                 ->select('full_name,observaciones, org_path,chromebook_asignacion.id AS id,chromebook_asignacion.email,asignado,id_chromebook')
                                 ->limit($pagination['limit'],$pagination['offset'])//->select('*,chromebook_asignacion.id AS id')
                                 ->join('emails','emails.email=chromebook_asignacion.email')
@@ -251,6 +253,11 @@ class Admin_Asignaciones extends Admin_Controller {
         );
         $historial = $this->asignacion_m->where('id_chromebook',$id)->get_all();
         
+        foreach($historial as &$hi)
+        {
+            $hi->removido = $hi->removido?format_date_calendar(substr($hi->removido,0,-9)):null; 
+            $hi->asignado = format_date_calendar(substr($hi->asignado,0,-9));
+        }
         if($historial)
         {
             $result['data']   = $historial;
@@ -259,106 +266,104 @@ class Admin_Asignaciones extends Admin_Controller {
 
       return $this->template->build_json($result);
     }
+
+      
     public function asignar($id=0)
     {
-        $result = array(
-            'status' => false,
+         $result = array(
+            'status' => true,
             'message' => '',
             'data'    => false
         );
-
-       $org_distinct = false;
-       $org_alterada = false;
-
-
-        if(!group_has_role('chromebooks','admin_asignaciones'))
-         {
-            $orgs_perm = Centro::GetPermissions('orgs');
+        
+        $org   = $this->input->post('org');
+        $email = $this->input->post('email');
+        
+        $history    = $this->asignacion_m->get_by(array(
+        
+            'email'    => $email['email'],
+            'removido IS NULL' => NULL 
+        )); 
+        $chromebook = $this->chromebook_m->get($id);
+        $asignacion = $this->asignacion_m->get_by(array(
+            'id_chromebook' => $id,
+            'removido IS NULL'      =>NULL, 
+        ));
+        if($history)
+        {
+            $result['message'] = sprintf(lang('chromebook:pre_alum'),$history->id_chromebook); 
+            $result['status']  = false;
+        }
+        if($asignacion)
+        {
+            $result['message'] = lang('chromebook:pre_asignado'); 
+            $result['status']  = false;
+        }
+        
+        if(!$chromebook)
+        {
+            $result['message'] = lang('chromebook:not_found');
+            $result['status']  = false; 
+        }
+        
+        if($result['status'])
+        {
             
-            $org = $this->org_m->where_in('id',$orgs_perm)->get_all();          
-
-            $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
-
-                     
-            foreach ($orgs_path as $org) 
+            if(!group_has_role('chromebooks','admin_asignaciones'))
             {
-                $org_path = $this->input->post('org');
-
-              //  $org_path['org_path'] = '/Alumnos/Plantel 03 - Escárcega';
-
-                if($org == $org_path['org_path'])
-                {                         
-                    $org_alterada = false;
-
-                    $chromebook = $this->chromebook_m->get_by('id' , $this->input->post('id_chromebook') );
-
-
-                    if($chromebook->org_path != $org_path['org_path'])
-                    {                         
-                         $org_distinct = true;
-
-                          // print_r('diferente');
-                         break;
-                    }
-
+                $orgs_perm        = Centro::GetPermissions('orgs');
+                $org_path         = $this->org_m->get_by('org_path',$org['org_path']);
+                $org_path_chrome  = $this->org_m->get_by('org_path',$chromebook->org_path);
+                
+                
+                
+                
+                if(!$org_path || !in_array($org_path->id,$orgs_perm))
+                {
+                    $result['message'] = lang('chromebook:org_distinct');
+                    return $this->template->build_json($result);
+                }
+                if(!$org_path_chrome || !in_array($org_path_chrome->id,$orgs_perm))
+                {
+                    $result['message'] = lang('chromebook:org_distinct');
+                    return $this->template->build_json($result);
+                }
+            }
+            
+            
+           
+            
+            $insert = array(
+                'responsable' => $email['full_name'],
+                'email'       => $email['email'],
+                'id_chromebook' => $id,
+                'asignado'      => date('Y-m-d H:i:s'),
+                'observaciones' => $this->input->post('observaciones')
+            );
+            
+                if($result_id = $this->asignacion_m->insert($insert))
+                {
+                    $insert['id']       = $result_id ;
+                    $insert['org_path'] = $org['org_path'];
+                    $result['message'] = lang('chromebook:asignado'); 
+                    $result['data']   = $insert;
+                    $result['status']   = true;
+                        
+                        if($org['org_path'] != $chromebook->org_path)
+                        { 
+                            
+                            $this->chromebook_m->update($id,array(
+                                    'org_path' =>  $org['org_path'], 
+                            ));
+                        }
                 }
                 else
                 {
-                   $org_alterada = true;
-                    $result['message'] = lang('chromebook:org_alterada'); 
-                }
-
-
-            }
+                    $result['message'] = lang('chromebook:error'); 
+                }            
+            
+        }
         
-        }
-
-        if($org_alterada == false){
-            $asignacion = $this->asignacion_m->get_by(array(
-                'id_chromebook' => $id,
-                'removido IS NULL'      =>NULL, 
-            ));
-            
-            if($asignacion)
-            {
-                $result['message'] = lang('chromebook:pre_asignado'); 
-            }
-            
-            else
-            {
-                $email = $this->input->post('email');
-                $insert = array(
-                    'responsable' => $email['full_name'],
-                    'email'       => $email['email'],
-                    'id_chromebook' => $id,
-                    'asignado'      => date('Y-m-d H:i:s'),
-                    'observaciones' => $this->input->post('observaciones')
-                );
-
-                
-                    if($result_id = $this->asignacion_m->insert($insert))
-                    {
-                        $insert['id'] = $result_id ;
-                        $result['message'] = lang('chromebook:asignado'); 
-                        $result['data']   = $insert;
-                        $result['status']   = true;
-
-
-                                        
-                            if($org_distinct == true && $org_alterada == false) 
-                                 { 
-                                    $this->chromebook_m->update($this->input->post('id_chromebook'),array(
-                                    'org_path' =>  $email['org_path'], ));
-                                 }
-
-                    }
-                    else
-                    {
-                        $result['message'] = lang('chromebook:error'); 
-                    }            
-                
-            }
-        }
        
         return $this->template->build_json($result);
     }
@@ -384,15 +389,9 @@ class Admin_Asignaciones extends Admin_Controller {
                 'removido' => date('Y-m-d H:i:s'),
                 'observaciones' => $this->input->post('observaciones')
             ));
-
-            $org = $this->input->post('org');
-
-            $this->chromebook_m->update($id,array(
-                                'org_path' =>  $org['org_path']));
-
-            $result['id_history']= $asignacion->id;
+            $result['data']    =  $asignacion->id;
             $result['message'] = lang('chromebook:removido');
-            $result['status'] = true;
+            $result['status']  = true;
         }
         return $this->template->build_json($result);
 
@@ -415,7 +414,7 @@ class Admin_Asignaciones extends Admin_Controller {
     }
     function get_emails()
     {
-        
+        $email = $this->input->post('email');
         $org_path = $this->input->post('org_path');
         
         /*$result = $this->db->select('*')
@@ -429,12 +428,20 @@ class Admin_Asignaciones extends Admin_Controller {
                         ->get('emails')
                         ->result();*/
                         
-          $result = $this->db->where('org_path',$org_path)
-                             ->order_by('email')
-                            ->get('emails')
+         
+                        
+          $result = $this->db->where(array(
+                                'org_path'=>$org_path,
+                                '(email NOT IN(SELECT email FROM default_chromebook_asignacion WHERE removido IS NULL)'.(!$email?'':' OR email=\''.$email.'\'').')' => null
+                                
+                                ))
+                             ->order_by('full_name')
+                             
+                             ->get('emails')
                            
                             ->result();
-          return $this->template->build_json($result);      
+         
+          return $this->template->build_json((array)$result);      
         //if($result)echo json_encode($result);
     }
 
@@ -455,19 +462,15 @@ class Admin_Asignaciones extends Admin_Controller {
            $this->db->insert('default_chromebook_asignacion',$data);
         }
     }
-
-    public function getOrgChrome()
+     public function getOrgChrome()
     {
          $result = array(
             'status' => false,
             'message' => '',
         );
-
         $org_path = $this->input->post('org_path');
         $serial = $this->input->post('id_chromebook');
-
         $chromebook = $this->chromebook_m->get_by('id' , $serial );
-
         if($chromebook->org_path == $org_path)
         {
              $result['status'] = true;
@@ -475,16 +478,12 @@ class Admin_Asignaciones extends Admin_Controller {
         else{
             $result['message'] = lang('chromebook:org_distinct');
         }
-
-
      return $this->template->build_json($result);
-
-
     }
 
-    function upload()
+   function upload()
     {
-        ini_set('max_execution_time', 0); 
+         ini_set('max_execution_time', 0); 
         $this->load->model(array(
             'files/file_folders_m'
         ));
@@ -492,15 +491,14 @@ class Admin_Asignaciones extends Admin_Controller {
         
         $result = array(
             'message' =>  '',
-            'status' => true,
+            'status' => false,
             'data'   => array()
         );
         
         $folder        = $this->file_folders_m->get_by_path('otros') OR show_error('Error al buscar la carpeta');
-
         $file_result   = Files::upload($folder->id,false,'file',false,false,false,'csv');
         
-        $error ;
+       
         
        
         if($file_result['status'])
@@ -509,7 +507,6 @@ class Admin_Asignaciones extends Admin_Controller {
             $file_path = $this->_path.'/'.$file_result['data']['filename'];           
               
             $file   = fopen($file_path, 'r');
-
             $max_line_length = defined('MAX_LINE_LENGTH') ? MAX_LINE_LENGTH : 10000;
             
             $header          = fgetcsv($file,$max_line_length); 
@@ -531,153 +528,105 @@ class Admin_Asignaciones extends Admin_Controller {
             {
                 
                 $csv['serial']  = utf8_encode($csv['serial']);
-
-                if( $csv['serial'])
+                if($csv['serial'])
                 {               
-                    if( $csv['observaciones'])
-                    {
-                       
-
+                    
                          $asignado = $this->asignacion_m->select('chromebook_asignacion.id,id_chromebook, org_path,asignado,removido')
-                            ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                           ->where( array('removido IS NULL' => NULL ,'asignado IS NOT NULL' => NULL ))->get_by('id_chromebook',$csv['serial']) ;
-
-
+                                        ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
+                                        ->where( array(
+                                            'removido IS NULL' => NULL ,
+                                            'asignado IS NOT NULL' => NULL 
+                                        ))
+                                        ->get_by('id_chromebook',$csv['serial']) ;
+                                        
                         if(!$asignado)
                         {
-                            $csv['message'] = 'La Chromebook No se encuetra Asignada';
+                            $csv['message'] = 'La Chromebook no se encuentra asignada o no existe';
                             $csv['icon']    = 'fa fa-warning';
                             $csv['status']= false;
-                            $error = true;
+                            
                              continue;
                         } 
-
                         else
                         {
-
-                            if ($asignado->org_path != $this->input->post('org'))
+                                if ($asignado->org_path != $this->input->post('org'))
                                 {
-
-                                    $csv['message'] = 'La Chromebook tiene otra ORG Registrada';
+                                    $csv['message'] = 'La Chromebook tiene otra ORG Registrada : '.$asignado->org_path;
                                    
-                                    $csv['icon']    = 'fa fa-warning';
-                                    $csv['status']= false;
-                                    $error = true;
+                                    $csv['icon']    = 'fa fa-ban';
+                                    $csv['status']  = false;
                                     continue;
                                 }
                                 else
                                 {
-                                    $error = false;
-                                    unset($csv_array_temp[$key]);       
+                                    
+                                    $csv_array[$key]['id'] = $asignado->id;
+                                    unset($csv_array_temp[$key]); 
+                                          
                                 }
                                                                        
-
                         }
-                    }
-                     else
-                    {
-                        $result['message']='Falta la columna observaciones en el archivo cargado';
-                        $result['status'] = false;
-                        $error = true;
-                        
-                    }
+                   
                 }
                 else
                 {
                     $result['message']='Falta la columna serial en el archivo cargado';
-                    $result['status'] = false;
-                    $error = true;
+                   
                     
                 }
-                
+               
                
                 
             }
-                       $result['data']   = $csv_array_temp;
-            
-            //return $this->template->build_json($result);
-             //echo  json_encode($result);
-            //return $this->template->build_json($result);
-            
-        }
-
-
-        if($error == false)
-        {
-        
-           foreach($csv_array as  $key =>  &$csv)
+            if(!$csv_array_temp)
             {
                 
-                $csv_['serial']  = utf8_encode($csv['serial']);
-
-                $asignado = $this->asignacion_m->select('chromebook_asignacion.id,id_chromebook, org_path,asignado,removido')
-                            ->join('chromebooks','chromebooks.id=chromebook_asignacion.id_chromebook')
-                           ->where( array('removido IS NULL' => NULL ,'asignado IS NOT NULL' => NULL ))->get_by('id_chromebook',$csv['serial']) ;
-
-                if($this->asignacion_m->update($asignado->id,array('removido' => date('Y-m-d H:i:s'),'observaciones' => $csv['observaciones'])))
-                {        
-                  $result['status']= true;
-                  $result['message']='Chromebooks Removidas con Exito';
-                  $result['asignado'] = true;
-                  unset($csv_array[$key]);      
-                                    
+               $result['status'] = true;
+               foreach($csv_array as  $key =>  &$csv)
+               {
+                    
+                    //$csv_['serial']  = utf8_encode($csv['serial']);
+                    
+                    if(!$this->asignacion_m->update($csv['id'],array('removido' => date('Y-m-d H:i:s'),'observaciones' => $csv['observaciones']?$csv['observaciones']:null)))
+                    {
+                        $result['status'] = false;
+                    }
+                    
+                }
+                //$result['data']   = $csv_array;
+                
+                if($result['status'])
+                {
+                    $result['message'] = lang('chromebook:removed');
                 }
                 else
                 {
-                   $result['status'] = true;
-                   $result['message'] = 'Error desconocido al remover una o mas chromeboos comuniquese con el Administrador';
-                   $csv['status']= false;
-                   $csv['message'] = 'Error al remover la chromebook comuniquese con el Administrador';
-                   $csv['icon']    = 'fa fa-warning';
-                }  
-            }
-            $result['data']   = $csv_array;
-        }
-        
-         
-        return $this->template->build_json($result);
-    }
-
-    public function delete()
-    {
-        $result = array(
-            'status' => false,
-            'message' => '',
-            'data'    => false
-        );
-        $id_chromebook = $this->input->post('id');
-
-        
-        $asignacion = $this->asignacion_m->where('removido IS NULL',null)->get_by('id_chromebook',$id_chromebook) ;
-
-        $asignado_centro = $this->chromebook_m->where('org_path IS NULL',null)->get_by('id',$id_chromebook) ;
-
-       
-
-        if(!$asignacion && $asignado_centro)
-        {
-
-            if( $this->chromebook_m->delete($id_chromebook))
-            {
-                $result['message'] = lang('chromebook:delete');
-                $result['status'] = true;
+                    $result['message'] = lang('chromebook:error_removed');
+                }
             }
             else
             {
-                $result['message'] = lang('chromebook:delete_error');
-            }           
+                 $result['message'] = lang('chromebook:error_list');
+                 rsort($csv_array_temp);
+                 $result['data']   = $csv_array_temp;
+            }
+             
+            
+            
+           
+            
         }
         else
         {
-            
-            $result['message'] = lang('chromebook:not_delete');
-            
+            $result = $file_result;
         }
+        
+        //print_r($result);
+        //exit();
         return $this->template->build_json($result);
-
     }
-
       
     
     
  }
+ ?>

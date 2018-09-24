@@ -117,8 +117,18 @@
             <td width="170">
                  <p style="text-align: center;font-size: 8.3px; margin: 2px 0;">
                   <br><br><br>
-                  <strong>C. {{director}}
-                  <br>DIRECTOR DE CENTRO EDUCATIVO
+                  
+                  <strong>
+                      {{if director.nombre }}
+                          C. 
+                          {{if director.titulo != 'NULL'}}
+                          {{director.titulo}} 
+                          {{endif}}
+                          {{director.nombre}}
+                      {{else}}
+                        NOMBRE Y FIRMA
+                      {{endif}}
+                      <br>DIRECTOR DE CENTRO EDUCATIVO
                   </strong>
                  </p>
             </td>
