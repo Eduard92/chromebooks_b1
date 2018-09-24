@@ -1,6 +1,7 @@
 <section ng-controller="IndexCtrlAsig">
+    <a href="#"  ng-click="report_dg()" uib-tooltip="Reporte" class="btn btn-success pull-right">Reporte</a>  
+
     <?php if(group_has_role('chromebooks','create')): ?>
-        <a href="#"  ng-click="report_dg()" uib-tooltip="Reporte" class="btn btn-success pull-right">Reporte</a>  
         <a href="#"  ng-click="newChrome()" uib-tooltip="Nueva Chromebook" class="btn btn-primary pull-right">Nuevo</a>
     <?php endif;?>
     <?php if(!group_has_role('chromebooks','admin_chrome') && !$chromebooks): ?>
@@ -40,11 +41,11 @@
                         <?php if(group_has_role('chromebooks','admin_chrome')): ?>
                         <td ng-if="chrome.org_path==null">
                             <button ng-disabled="chrome.estatus != 'disponible' || chrome.email != null" uib-tooltip="Asignar Chromebook a Org" href="#" ng-click="asignar(chrome)" class="btn btn-default btn-success ui-wave "><i class="fa fa-plus-square" aria-hidden="true"></i> </button> 
-                            <button ng-disabled="chrome.email != null || chrome.org_path != '/Dirección General'"  uib-tooltip="Configurar Estatus" href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave" ><i class="fa fa-cogs" aria-hidden="true"></i></button>
+                            <button ng-disabled="chrome.email != null"  uib-tooltip="Configurar Estatus" href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave" ><i class="fa fa-cogs" aria-hidden="true"></i></button>
                             <button uib-tooltip="Eliminar Chromebook" href="#" ng-click="delete(chrome)" confirm-action class="btn btn-default btn-danger ui-wave" ><i class="fa  fa-trash" aria-hidden="true"></i></button>
                         </td>
                         <td ng-if="chrome.org_path!=null">
-                            <button ng-disabled="chrome.estatus != 'disponible' || chrome.email != null"  uib-tooltip="Remover Chromebook a Org" href="#" ng-click="remover(chrome)" class="btn btn-default btn-danger ui-wave "><i class="fa fa-minus-square" aria-hidden="true"></i></button> <button  ng-disabled="chrome.email != null || chrome.org_path != '/Dirección General'" uib-tooltip="Configurar Estatus"  href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave"><i class="fa fa-cogs" aria-hidden="true"></i></button>
+                            <button ng-disabled="chrome.estatus != 'disponible' || chrome.email != null"  uib-tooltip="Remover Chromebook a Org" href="#" ng-click="remover(chrome)" class="btn btn-default btn-danger ui-wave "><i class="fa fa-minus-square" aria-hidden="true"></i></button> <button  ng-disabled="chrome.email != null" uib-tooltip="Configurar Estatus"  href="#" ng-click="config(chrome)" class="btn btn-default btn-primary ui-wave"><i class="fa fa-cogs" aria-hidden="true"></i></button>
                             <button disabled="true"  uib-tooltip="Eliminar Chromebook" href="#" ng-click="delete(chrome.id)" class="btn btn-default btn-danger ui-wave" ><i class="fa  fa-trash" aria-hidden="true"></i></button>
                         </td>
                         <?php endif;?>
@@ -131,7 +132,6 @@
      <?php  echo form_open('','name="frm_status" id="frm_status"');?>
     <div class="modal-body">
         <div ng-if="form_status.email" class="alert alert-warning" ><?=lang('chromebook:not_change')?></div>
-        <div ng-if="form_status.org_path != '/Dirección General'" class="alert alert-warning" ><?=lang('chromebook:not_change_org')?></div>                    
 
         <div ng-bind-html="message" ng-if="message" class="alert alert-danger" "></div>                    
                     <div class="form-group">
@@ -140,7 +140,7 @@
                      </div>   
                       <div class="form-group">
                             <label>Estatus</label>
-                            <select class="form-control" name="chrome_status" ng-disabled="form_status.email || form_status.org_path != '/Dirección General'" ng-model="form_status.estatus" required>
+                            <select class="form-control" name="chrome_status" ng-disabled="form_status.email" ng-model="form_status.estatus" required>
                                 <option value="disponible"> Disponible </option>
                                 <option value="reparacion"> Reparación </option>
                                 <option value="extraviado"> Extraviado </option>
@@ -158,7 +158,7 @@
     <div class="modal-footer">
        
         <button type="button" ui-wave class="btn btn-flat" ng-click="cancel()">Cancelar</button>
-        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-if="!form_status.email && form_status.org_path == '/Dirección General'" ng-disabled="!valid_form()" ng-click="save()" ">Aceptar</button>
+        <button type="button" ui-wave class="btn btn-flat btn-primary" ng-if="!form_status.email" ng-disabled="!valid_form()" ng-click="save()" ">Aceptar</button>
     </div>    
      <?php echo form_close(); ?>                       
 </script>
@@ -179,9 +179,20 @@
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="reparacion"/> Reparación</label>
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="extraviado"/> Extraviado</label>
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="baja"/> Baja</label>
+                             <?php if(group_has_role('chromebooks','admin_chrome')): ?>
                              <label class="radio-inline"><input type="radio"  ng-model="form_status.estatus" value="general"/> General</label>
+                             <?php endif;?>
                          </div>
-                   </div>               
+                   </div> 
+                   <?php if(!group_has_role('chromebooks','admin_chrome')): ?>
+
+                   <div class="form-group" ng-if="form_status.estatus">
+                            <label>Organización</label>
+
+                            <select class="form-control" ng-init="form_status.org = orgs[0]" ng-model="form_status.org" ng-options="org.name for org in orgs track by org.org_path" required>
+                            </select>
+                   </div>     
+                   <?php endif;?>           
     </div>
     <div class="modal-footer">
        

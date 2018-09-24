@@ -27,8 +27,11 @@ class Admin extends Admin_Controller {
          if(!group_has_role('chromebooks','admin_chrome'))
         {
             $orgs_perm = Centro::GetPermissions('orgs');
-          
+            
+            $orgs = $this->org_m->where_in('id',$orgs_perm)->get_all();          
+
             $orgs_path = $this->org_m->where_in('id',$orgs_perm)->dropdown('id','org_path');
+
                 if(count($orgs_path)>0)
                  {
                     $disponibles  = $this->chromebook_m->select('chromebooks.id AS id,chromebooks.org_path,estatus')
@@ -567,7 +570,11 @@ class Admin extends Admin_Controller {
         else{
             if(is_string($estatus) && $estatus != 'general')
             {
-                //$base_where['org_path'] = '/Dirección General';
+                if(group_has_role('chromebooks','admin_chrome'))
+                {
+                $org?$base_where['org_path'] = $org:'';
+                }
+
                 if($estatus == 'reparacion')
                 {
                     $base_where['estatus'] = 'reparacion';
@@ -588,18 +595,24 @@ class Admin extends Admin_Controller {
                 {
                    $this->session->set_flashdata('error',lang('chromebook:error_doc'));
             
-                    redirect('admin/chromebooks');
+                   redirect('admin/chromebooks');
                 }
                 $chromebooks  = $this->chromebook_m->where($base_where)
                                 ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
                                 ->get_all();
+
+                    $org_path_explod = explode("/",$org);  
+                    $org  =  str_replace('/','',$org_path_explod[count($org_path_explod)-1]);
+                    $org?$title_org = $org:'';
+
                     if(empty($chromebooks) == true)
                     {
                       $title = ' No se existen Chromebooks con el Estatus: '.ucwords($estatus); 
                     } 
                     else
                     {
-                         $title = 'Relación de Chromebooks con Estatus: '.ucwords($estatus);          
+                         $title = 'Relación de Chromebooks con Estatus: '.ucwords($estatus);       
+                         $org =    
                          $table = '<tbody>';
                          $table_header = '<tr>';
                         $count = count($chromebooks)<9?count($chromebooks):9;
@@ -736,6 +749,7 @@ class Admin extends Admin_Controller {
                     'fecha'=>$fecha,
                     'table_header'=>$table_header,
                     'title'=>$title,
+                    'title_org'=>$title_org,
                     'total'=>$total,
                     'total_gral'=>$total_gral),true);
            

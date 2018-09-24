@@ -9,6 +9,7 @@
         </table>
     </page_header>
     <h4 align="center">{{title}}</h4>
+    <h4 align="center">{{title_org}}</h4>
     <p align="right">{{fecha}}</p>
     <p align="right">{{total}}</p>
     <br />

@@ -906,6 +906,7 @@
 
     function InputModalReportDg($scope,$http,$uibModalInstance,$window)
     {
+        $scope.orgs = orgs;
 
          $scope.cancel = function(){
              $uibModalInstance.dismiss("cancel");
@@ -914,9 +915,9 @@
         $scope.save = function(){
 
             var estatus = $scope.form_status.estatus?$scope.form_status.estatus:'';
-console.log($scope.form_status.estatus);
-
-              $window.open(SITE_URL+'admin/chromebooks/report/?estatus='+estatus); 
+            var org = $scope.form_status.org?$scope.form_status.org:'';
+            var org_post = org?'&org='+org.org_path:'';
+                  $window.open(SITE_URL+'admin/chromebooks/report/?estatus='+estatus+org_post); 
 
               $uibModalInstance.close();
             
