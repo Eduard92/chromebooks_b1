@@ -184,15 +184,19 @@
                              <?php endif;?>
                          </div>
                    </div> 
-                   <?php if(!group_has_role('chromebooks','admin_chrome')): ?>
 
-                   <div class="form-group" ng-if="form_status.estatus">
+                   <div class="form-group" ng-if="form_status.estatus && form_status.estatus != 'general'">
                             <label>Organización</label>
-
-                            <select class="form-control" ng-init="form_status.org = orgs[0]" ng-model="form_status.org" ng-options="org.name for org in orgs track by org.org_path" required>
+                            <select class="form-control" 
+                            <?php if(!group_has_role('chromebooks','admin_chrome')): ?>
+                                ng-init="form_status.org = orgs[0]"
+                            <?php endif;?> 
+                            ng-model="form_status.org" ng-options="org.name for org in orgs track by org.org_path" required>
+                              <?php if(group_has_role('chromebooks','admin_chrome')): ?>
+                               <option value="" > Todos</option>
+                            <?php endif;?>
                             </select>
                    </div>     
-                   <?php endif;?>           
     </div>
     <div class="modal-footer">
        

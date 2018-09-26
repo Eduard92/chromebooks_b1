@@ -574,6 +574,10 @@ class Admin extends Admin_Controller {
                 {
                 $org?$base_where['org_path'] = $org:'';
                 }
+                else
+                {
+                  $base_where['org_path'] = $org;
+                }
 
                 if($estatus == 'reparacion')
                 {
