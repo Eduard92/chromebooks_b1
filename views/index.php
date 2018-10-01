@@ -42,24 +42,11 @@
         </thead>
 
 <tbody>
-          <?php foreach($total_asignados as $elemento):?>
-            <tr>
-
-                <td><?= $elemento->org_path?></td>
-                
-                <td><?= $elemento->alumnos?></td>
-
-                
-                <td><?= $elemento->numrows?></td>
-
-               
-            </tr>
-        <?php endforeach;?>
+          
             <tr height="40">
 
                 <td><strong>Disponibles</strong></td>
                 
-                <td><strong><?php echo $disponibles?></strong></td>
 
                
             </tr>

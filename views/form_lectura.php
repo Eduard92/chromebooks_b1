@@ -49,7 +49,7 @@
                 <dt>Email:</dt>
                 <dd> <?=$asignado->email?></dd>
                 <dt>Serial:</dt>
-                <dd> <?=$asignado->serial?></dd>
+                <dd> <?=$asignado->id_chromebook?></dd>
                 <dt>Org:</dt>
                 <dd> <?=$asignado->org_path?></dd>
             </dl>

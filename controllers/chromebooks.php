@@ -19,17 +19,17 @@ class Chromebooks extends Public_Controller
     {
          $email = null;
 
-        $total_asignados =  $this->db->select('org_path, COUNT(*) AS numrows')
+     /*  $total_asignados =  $this->db->select('org_path, COUNT(*) AS numrows')
           ->join('chromebooks','chromebooks.email=emails.email')
           ->group_by('org_path')
           ->get('emails')
           ->result();
       //  print_r($total_asignados);
 
-                    
+                    */
 
 
-    $asignado =  $this->db                                             
+    /*$asignado =  $this->db                                             
                          ->join('chromebooks','chromebooks.email=emails.email')
                          ->count_all_results('emails');
 
@@ -75,15 +75,15 @@ class Chromebooks extends Public_Controller
               
  
           }
-
+*/
 
 
  $this->template->set_layout(false)
             ->enable_parser(true)
-            ->set('total_asignados',$total_asignados)
+            //->set('total_asignados',$total_asignados)
             //->set('asignados',$asignados)
            // ->set('data',$data)
-            ->set('disponibles',$disponibles)
+          //  ->set('disponibles',$disponibles)
             ->build('index');   
     }
 
@@ -183,6 +183,7 @@ class Chromebooks extends Public_Controller
         $result   = false;
         $message  = '';
         $org_path = $this->input->post('org_path');
+        $serial = $this->input->post('serial');
         
         $asignado   = false; 
         $total_asignados = 0;
@@ -204,54 +205,79 @@ class Chromebooks extends Public_Controller
              
             
            
-           $chromebook =  $this->db->where('serial',$this->input->post('serial'))->get('chromebooks')->row();
-           
-           $list =  $this->db->select('serial,full_name,org_path,emails.email AS email')
+           $chromebook =  $this->db->where(array('id' => $serial,/* 'org_path' => $org_path*/))->get('Chromebooks')->row();
+
+           /*
+           $list =  $this->db->select('full_name,emails.org_path,emails.email AS email')
                     ->where(array(
-                         'org_path'=>$this->input->post('org_path')
+                         'emails.org_path'=>$this->input->post('org_path')
                        
                      ))->order_by('grado,grupo')
                      ->join('alumnos','alumnos.idalum=emails.table_id')
-                     ->join('chromebooks','chromebooks.email=emails.email','LEFT')
-                     ->get('emails')->result();
-                     
+                     //->join('chromebooks','chromebooks.email=emails.email','LEFT')
+                     ->get('emails')->result();*/
+
+            $list = $this->db->where(array(
+                                'org_path'=>$org_path,
+                                '(email NOT IN(SELECT email FROM default_chromebook_asignacion WHERE removido IS NULL))' => null
+                                
+                                ))
+                             ->order_by('full_name')
+                             
+                             ->get('emails')
+                             ->result();
+
+        
+       // print_r($chromebook);
             
            
            if(!$chromebook)
            {
                $message = '<div class="alert alert-warning">No hay registro de la CHROMEBOOK</div>';
            }
+           elseif ($chromebook->org_path != $org_path) {
+               $message = '<div class="alert alert-warning">LA CHROMEBOOK NO PERTENECE AL CENTRO SELECCIONADO</div>';
+
+           }
            else{
                $inc = 0;
-               
-               if($chromebook->email)
+               if($chromebook->org_path == $org_path)
                {
-                    $asignado = $this->db->where('emails.email',$chromebook->email)
-                                    ->join('chromebooks','chromebooks.email=emails.email')
-                                    ->get('emails')->row();
-                                    
-                    if(!$asignado)
+                    $asignado = $this->db->where(array('id_chromebook' => $serial,
+                                           'removido IS NULL' =>NULL,))
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    ->get('chromebook_asignacion')->row();
+
+                   // print_r($asignado);       
+                    if($asignado && !$asignado->email)
                     {
-                        $message = '<div class="alert alert-danger"> CHROMEBOOK asignada pero no existe el beneficiado: '.$chromebook->email.'</div>';
+                        $message = '<div class="alert alert-danger"> CHROMEBOOK asignada pero no existe el beneficiado: '.$asignado->email.'</div>';
                     }
-                    else
+                    elseif($asignado)
                     {
-                        $message = '<div class="alert alert-info">CHROMEBOOK asignada : '.$chromebook->serial.'  / '.$chromebook->email.'</div>';
+                        $message = '<div class="alert alert-info">CHROMEBOOK asignada : '.$asignado->id_chromebook.'  / '.$asignado->email.'</div>';
                     }
                    //$asignado = array(
                      // 'email' => $chromebook->email,
                    //);
-               }
-               else{
-                   while(!$asignado)
+             //  }
+               //else{
+                   while(!$asignado && $chromebook->estatus == 'disponible')
                    {
-                        
                         foreach($list as $alum)
                         {
-                            
-                            if(!$alum->serial)
+
+                            $insert = array(
+                                'responsable' => $alum->full_name,
+                                'email'       => $alum->email,
+                                'id_chromebook' => $chromebook->id,
+                                'asignado'      => date('Y-m-d H:i:s'),
+                            );
+                                       // print_r($insert);
+
+                                                                 /* if(!$alum->serial)
                             {
-                                
+                               
                                $data = array(
                                 'id_chromebook' => $chromebook->id,
                                 'log'           => 'asignado',
@@ -259,20 +285,19 @@ class Chromebooks extends Public_Controller
                                 'log_email'     => $chromebook->email
 
                                );
-
-                               $this->db->insert('default_chromebook_historial',$data);
+*/
+                               //$this->db->insert('default_chromebook_historial',$data);
                                                     
                                 
-                                $asignado = array('email' => $alum->email,'updated_on'=>now());
+                            //$asignado = array('email' => $alum->email,'updated_on'=>now());
                                 
-                                if($this->db->where('serial',$chromebook->serial)
-                                            ->set($asignado)
-                                            ->update('chromebooks'))
+                                if($asignado = $this->db->insert('chromebook_asignacion',$insert))
                                 {
                                     //$asignado =  array(
                                       //  'org_path'  =>,
                                         //'full_name' =>,
                                         //'serial'    =>
+                                  print_r($asignado);
                                     
                                     //);
                                     /*$this->db->where('emails.email',$alum->email)
@@ -281,14 +306,14 @@ class Chromebooks extends Public_Controller
                                     //$asignado['full_name']  = $alum->full_name;
                                     //$asignado['given_name'] = $alum->given_name;
                                     //$asignado['family_name'] = $alum->family_name;
-                                    $asignado['serial']    = $chromebook->serial;
-                                    $asignado['full_name'] = $alum->full_name;
-                                    $asignado['org_path']  = $alum->org_path;
-                                    $asignado = (Object)$asignado;
+                                  //  $asignado['serial']    = $chromebook->id;
+                                  //  $asignado['full_name'] = $alum->full_name;
+                                  //  $asignado['org_path']  = $alum->org_path;
+                                   // $asignado = (Object)$asignado;
                                     
                                     break;
-                                }
-                            }
+                               }
+                            //}
                         }
                         if(!$asignado)
                         {
@@ -308,15 +333,7 @@ class Chromebooks extends Public_Controller
            }
            
             
-              $total_asignados =  $this->db
-                        ->where(array(
-                             'org_path'=>$this->input->post('org_path')
-                           
-                         ))
-                         
-                         ->join('chromebooks','chromebooks.email=emails.email')
-                         ->count_all_results('emails');
-           
+                        
                      
            
         }
@@ -326,7 +343,7 @@ class Chromebooks extends Public_Controller
             ->enable_parser(true)
             ->set('orgs',array_for_select($orgs,'org_path','org_path'))
             ->set('total_alumnos',isset($list)?count($list):0)
-            ->set('total_asignados',$total_asignados)
+            ->set('total_asignados',$total_asignados?$total_asignados:'')
             ->set('asignado',$asignado)
             ->set('message',$message)
             ->build('form_lectura');        

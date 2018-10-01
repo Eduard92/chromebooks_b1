@@ -167,7 +167,8 @@ class Admin_Asignaciones extends Admin_Controller {
              {
              $chromebooks  = $this->chromebook_m->where_in('org_path',$orgs_path)
                                     ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
-                                    
+                                    ->where('estatus = "disponible"',null)
+
                                     ->get_all();
             
              $total_asignaciones = $this->asignacion_m->where_in('org_path',$orgs_path)->where($base_where)
@@ -195,7 +196,8 @@ class Admin_Asignaciones extends Admin_Controller {
 
              $chromebooks  = $this->chromebook_m 
                                     ->where('id NOT IN(SELECT id_chromebook FROM default_chromebook_asignacion WHERE removido IS NULL)',null)
-                                    
+                                     ->where('estatus = "disponible"',null)
+
                                     ->get_all();
             
              $total_asignaciones = $this->asignacion_m->where($base_where)
@@ -287,7 +289,7 @@ class Admin_Asignaciones extends Admin_Controller {
         $chromebook = $this->chromebook_m->get($id);
         $asignacion = $this->asignacion_m->get_by(array(
             'id_chromebook' => $id,
-            'removido IS NULL'      =>NULL, 
+            'removido IS NULL'      =>NULL,
         ));
         if($history)
         {
