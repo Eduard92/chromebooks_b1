@@ -166,6 +166,10 @@ class Chromebooks extends Public_Controller
            
         }
 
+                      $total_asignados =  $this->db->where(array(
+                             'org_path'=>$this->input->post('org_path')))
+                      ->count_all_results('chromebooks');
+
 
         $this->template->set_layout(false)
             ->enable_parser(true)
@@ -219,9 +223,7 @@ class Chromebooks extends Public_Controller
 
             $list = $this->db->where(array(
                                 'org_path'=>$org_path,
-                                '(email NOT IN(SELECT email FROM default_chromebook_asignacion WHERE removido IS NULL))' => null
-                                
-                                ))
+                                '(email NOT IN(SELECT email FROM default_chromebook_asignacion WHERE removido IS NULL))' => null))
                              ->order_by('full_name')
                              
                              ->get('emails')
@@ -409,6 +411,171 @@ class Chromebooks extends Public_Controller
             ->enable_parser(true)
             ->set('message',$message)
             ->build('form_consulta');   
+    }
+
+
+    ////////////////Asignar org////////////////
+
+    public function asignarOrg ()
+    {
+
+
+        //$this->load->helper('cookie');
+        
+        $result   = false;
+        $message  = '';
+        $org_path = $this->input->post('org_path');
+        $serial = $this->input->post('serial');
+        
+        $asignado   = false; 
+        $total_asignados = 0;
+        
+        
+        if(!$_POST)
+        {
+            delete_cookie('total_asignados');
+        }
+        
+        if($_POST && $org_path)
+        {
+
+           $chromebook =  $this->db->where(array('id' => $serial,/* 'org_path' => $org_path*/))->get('Chromebooks')->row();
+           
+           
+           if(!$chromebook)
+           {
+               $message = '<div class="alert alert-warning">No hay registro de la CHROMEBOOK</div>';
+           }
+           elseif ($chromebook->org_path != null) {
+               $message = '<div class="alert alert-info">LA CHROMEBOOK ESTA ASIGNADA A: '.$chromebook->org_path.'</div>';
+
+           }
+           else{
+               $inc = 0;
+
+                    $asignado = $this->db->where(array('id_chromebook' => $serial,
+                                           'removido IS NULL' =>NULL,))
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    ->get('chromebook_asignacion')->row();
+                    if($asignado)
+                    {
+                        $message = '<div class="alert alert-info">CHROMEBOOK asignada : '.$asignado->id_chromebook.'  / '.$asignado->email.'</div>';
+                    }
+                    else
+                    {
+                            $data = array('org_path'  =>  $org_path);
+
+                            if($this->db->update('chromebooks', $data, array('id' => $serial)))
+                            {            
+                                $message = '<div class="alert alert-success">CHROMEBOOK ASIGNADA A: : '.$org_path.' CORRECTAMENTE</div>';
+                            }
+                            else
+                            {
+                                $message = '<div class="alert alert-danger">OCURRIO UN PROBLEMA AL ASIGNADA A : '.$serial.' A: '.$org_path.'</div>';
+                            }   
+                    }
+
+
+               }
+           }
+           
+            
+          $total_asignados =  $this->db
+                        ->where(array('org_path'=>$this->input->post('org_path')))
+                        ->count_all_results('chromebooks');             
+                     
+           
+        
+        
+         $orgs = $this->db->group_by('org_path')->get('emails')->result();
+         $this->template->set_layout(false)
+            ->enable_parser(true)
+            ->set('orgs',array_for_select($orgs,'org_path','org_path'))
+            //->set('total_alumnos',isset($list)?count($list):0)
+            ->set('total_asignados',$total_asignados?$total_asignados:'')
+            //->set('asignado',$asignado)
+            ->set('message',$message)
+            ->build('form_asigOrg');        
+    
+    
+
+    }
+
+    /////////////////////REMOVER ORG///////////////
+        public function removerOrg ()
+    {
+
+
+        //$this->load->helper('cookie');
+        
+        $result   = false;
+        $message  = '';
+        $org_path = $this->input->post('org_path');
+        $serial = $this->input->post('serial');
+        
+        $asignado   = false; 
+        
+        
+        if($_POST)
+        {
+              $asignado = $this->db->where(array('id_chromebook' => $serial,
+                                           'removido IS NULL' =>NULL,))
+                                    ->join('emails','emails.email=chromebook_asignacion.email')
+                                    ->get('chromebook_asignacion')->row();
+            if($asignado)
+            {
+                $message = '<div class="alert alert-warning">CHROMEBOOK asignada : '.$asignado->id_chromebook.'  / '.$asignado->email.'</div>';
+            }
+            else
+            {
+
+              $chromebook =  $this->db->where(array('id' => $serial,/* 'org_path' => $org_path*/))->get('Chromebooks')->row();
+           
+           
+              if(!$chromebook)
+               {
+                   $message = '<div class="alert alert-warning">No hay registro de la CHROMEBOOK</div>';
+               }
+              elseif($chromebook->org_path == null)
+               {
+                   $message = '<div class="alert alert-info">La CHROMEBOOK no habia sido asignada previamente</div>';
+               }
+               else 
+               {
+                   $data = array('org_path'  =>  null);
+
+                            if($this->db->update('chromebooks', $data, array('id' => $serial)))
+                            {            
+                                $message = '<div class="alert alert-success">CHROMEBOOK REMOVIDA A: '.$org_path.' CORRECTAMENTE</div>';
+                            }
+                            else
+                            {
+                                $message = '<div class="alert alert-danger">OCURRIO UN PROBLEMA AL INTENTAR REMOVER : '.$serial.' /: '.$org_path.'</div>';
+                            }   
+               }
+
+
+            }
+        }
+           
+            
+                        
+                     
+           
+        
+        
+         $orgs = $this->db->group_by('org_path')->get('emails')->result();
+         $this->template->set_layout(false)
+            ->enable_parser(true)
+            ->set('orgs',array_for_select($orgs,'org_path','org_path'))
+            //->set('total_alumnos',isset($list)?count($list):0)
+            //->set('total_asignados',$total_asignados?$total_asignados:'')
+            //->set('asignado',$asignado)
+            ->set('message',$message)
+            ->build('form_removOrg');        
+    
+    
+
     }
     
 }

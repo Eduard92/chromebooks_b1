@@ -62,7 +62,12 @@
                 
         <td WIDTH="100" > <a href="<?=base_url('/chromebooks/remover')?>" > Dar de Baja</a></td>
 
-        <td> <a href="<?=base_url('/chromebooks/consulta')?>" > Levantamiento</a></td>
+      </tr>
+       <tr>
+
+        <td  WIDTH="100"><a type="button" href="<?=base_url('/chromebooks/asignarOrg')?>"> Asignar a Org</a></td>
+                
+        <td WIDTH="100" > <a href="<?=base_url('/chromebooks/removerOrg')?>" > Remover Org</a></td>
 
       </tr>
 
