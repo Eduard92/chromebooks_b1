@@ -546,7 +546,7 @@ class Chromebooks extends Public_Controller
 
                             if($this->db->update('chromebooks', $data, array('id' => $serial)))
                             {            
-                                $message = '<div class="alert alert-success">CHROMEBOOK REMOVIDA A: '.$org_path.' CORRECTAMENTE</div>';
+                                $message = '<div class="alert alert-success">CHROMEBOOK REMOVIDA A: '.$chromebook->org_path.' CORRECTAMENTE</div>';
                             }
                             else
                             {
